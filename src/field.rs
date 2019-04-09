@@ -7,10 +7,10 @@
 //! This implementation is derived from the 52-bit scalar
 //! implementation contributed to `curve25519-dalek` by Andrew Moon.
 
-use curve25519_dalek::scalar::Scalar;
-
 use std::default::Default;
 use std::ops::{Add, Mul, Sub};
+
+use crate::Ristretto255Scalar;
 
 /// A field element modulo \\(2\^{252} +
 /// 27742317777372353535851937790883648493\\), the ground field for
@@ -45,14 +45,14 @@ impl Default for FieldElement {
     }
 }
 
-impl From<Scalar> for FieldElement {
-    fn from(packed: Scalar) -> FieldElement {
+impl From<Ristretto255Scalar> for FieldElement {
+    fn from(packed: Ristretto255Scalar) -> FieldElement {
         unimplemented!();
     }
 }
 
-impl Into<Scalar> for FieldElement {
-    fn into(self) -> Scalar {
+impl Into<Ristretto255Scalar> for FieldElement {
+    fn into(self) -> Ristretto255Scalar {
         unimplemented!();
     }
 }

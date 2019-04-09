@@ -1,3 +1,5 @@
+pub type Ristretto255Scalar = curve25519_dalek::scalar::Scalar;
+
 mod field;
 
 #[cfg(test)]
