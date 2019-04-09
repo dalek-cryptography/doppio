@@ -1,0 +1,9 @@
+[package]
+name = "doppio"
+version = "0.1.0"
+authors = ["Cathie Yun <cathieyun@gmail.com>", "Henry de Valence <hdevalence@hdevalence.ca>"]
+edition = "2018"
+
+
+[dependencies]
+curve25519-dalek = "1.1.3"
