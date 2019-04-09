@@ -8,9 +8,13 @@
 //! implementation contributed to `curve25519-dalek` by Andrew Moon.
 
 use std::default::Default;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Neg, Sub};
 
 use crate::Ristretto255Scalar;
+
+/// Edwards `d` value, equal to `-86649/86650 mod p`.
+/// TODO: actually generate the right value here
+pub(crate) const EDWARDS_D: FieldElement = FieldElement([0; 5]);
 
 /// A field element modulo \\(2\^{252} +
 /// 27742317777372353535851937790883648493\\), the ground field for
@@ -54,6 +58,14 @@ impl From<Ristretto255Scalar> for FieldElement {
 impl Into<Ristretto255Scalar> for FieldElement {
     fn into(self) -> Ristretto255Scalar {
         unimplemented!();
+    }
+}
+
+impl Neg for FieldElement {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        unimplemented!()
     }
 }
 
