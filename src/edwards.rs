@@ -1,7 +1,9 @@
 #![allow(non_snake_case)]
 
-use crate::field::{FieldElement, EDWARDS_D};
 use core::ops::{Add, Neg, Sub};
+
+use crate::field::{FieldElement, EDWARDS_D};
+use crate::Ristretto255Scalar;
 
 // ------------------------------------------------------------------------
 // Internal point representations
@@ -50,11 +52,15 @@ impl EdwardsPoint {
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        let A = self.X * other.X;
-        let B = self.Y * other.Y;
-        let C = EDWARDS_D * self.T * other.T;
-        let D = self.Z * other.Z;
-        let E = (self.X + self.Y) * (other.X + other.Y) - A - B;
+        // k = 2d'. d' = -d/a and a = -1, so k = 2d.
+        let two = Ristretto255Scalar::from(2u8).into();
+        let k = EDWARDS_D * two;
+
+        let A = (self.Y - self.X) * (other.Y - other.X);
+        let B = (self.Y + self.X) * (other.Y + other.X);
+        let C = k * self.T * other.T;
+        let D = two * self.Z * other.Z;
+        let E = B - A;
         let F = D - C;
         let G = D + C;
         let H = B + A;
