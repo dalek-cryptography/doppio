@@ -76,8 +76,29 @@ impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
 
 impl<'a, 'b> Sub<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
+
+    // TODO: add a test that A - B = A + -B
     fn sub(self, other: &'b EdwardsPoint) -> EdwardsPoint {
-        self + &-other
+        // The same equation as addition, except other.X and other.T are negated.
+        // k = 2d'. d' = -d/a and a = -1, so k = 2d.
+        let two = Ristretto255Scalar::from(2u8).into();
+        let k = EDWARDS_D * two;
+
+        let A = (self.Y - self.X) * (other.Y + other.X);
+        let B = (self.Y + self.X) * (other.Y - other.X);
+        let C = k * self.T * other.T;
+        let D = two * self.Z * other.Z;
+        let E = B - A;
+        let F = D + C;
+        let G = D - C;
+        let H = B + A;
+
+        EdwardsPoint {
+            X: E * F,
+            Y: G * H,
+            Z: F * G,
+            T: E * H,
+        }
     }
 }
 
