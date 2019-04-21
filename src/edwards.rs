@@ -1,3 +1,8 @@
+//! Point arithmetic for the doppio curve.
+//!
+//! This implements the equations for point arithmetic from
+//! HWCD: https://eprint.iacr.org/2008/522.pdf
+
 #![allow(non_snake_case)]
 
 use core::ops::{Add, Neg, Sub};
@@ -40,8 +45,27 @@ impl Default for EdwardsPoint {
 
 impl EdwardsPoint {
     /// Add this point to itself.
-    pub(crate) fn double(&self) -> EdwardsPoint {
-        self + self
+    // TODO: add a test that A.double() = A * A
+    fn double(&self) -> EdwardsPoint {
+        let two: FieldElement = Ristretto255Scalar::from(2u8).into();
+
+        let A = self.X * self.X;
+        let B = self.Y * self.Y;
+        // Is it cheaper to add Z*Z + Z*Z or multiply 2*Z*Z?
+        let C = two * self.Z * self.Z;
+        // a = -1
+        let D = -A;
+        let E = (self.X + self.Y) * (self.X + self.Y) - A - B;
+        let G = D + B;
+        let F = G - C;
+        let H = D - B;
+
+        EdwardsPoint {
+            X: E * F,
+            Y: G * H,
+            Z: F * G,
+            T: E * H,
+        }
     }
 }
 
@@ -51,9 +75,10 @@ impl EdwardsPoint {
 
 impl<'a, 'b> Add<&'b EdwardsPoint> for &'a EdwardsPoint {
     type Output = EdwardsPoint;
+
     fn add(self, other: &'b EdwardsPoint) -> EdwardsPoint {
         // k = 2d'. d' = -d/a and a = -1, so k = 2d.
-        let two = Ristretto255Scalar::from(2u8).into();
+        let two: FieldElement = Ristretto255Scalar::from(2u8).into();
         let k = EDWARDS_D * two;
 
         let A = (self.Y - self.X) * (other.Y - other.X);
