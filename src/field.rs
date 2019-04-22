@@ -74,20 +74,6 @@ impl Add<FieldElement> for FieldElement {
 impl Sub<FieldElement> for FieldElement {
     type Output = FieldElement;
     fn sub(self, rhs: FieldElement) -> FieldElement {
-        // let mut difference = FieldElement::zero();
-        // let mask = (1u64 << 52) - 1;
-
-        // // a - b
-        // let mut borrow: u64 = 0;
-        // for i in 0..5 {
-        //     let total = self.0[i].wrapping_sub(rhs.0[i] + borrow);
-        //     borrow = total >> 63;
-        //     difference.0[i] = total & mask;
-        // }
-
-        // // conditionally add l if the difference is negative
-        // unimplemented!()
-
         let mut difference = FieldElement::zero();
         let mask = (1u64 << 52) - 1;
 
