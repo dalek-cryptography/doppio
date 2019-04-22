@@ -203,7 +203,13 @@ impl FieldElement {
 
     pub fn one() -> FieldElement {
         // This needs to return 1/R mod l
-        unimplemented!();
+        FieldElement([
+            4302102966953709,
+            1049714374468698,
+            4503599278581019,
+            4503599627370495,
+            17592186044415,
+        ])
     }
 
     pub fn invert(&self) -> FieldElement {
@@ -279,6 +285,34 @@ mod tests {
         let a = FieldElement([(1 << 52) - 3, 10, 0, 0, 0]);
         let b = FieldElement([(1 << 52) - 1, 20, 0, 0, 0]);
         a - b;
-        panic!();
+    }
+
+    #[test]
+    fn mul() {
+        let mut a_bytes = [0; 32];
+        a_bytes[0] = 2;
+
+        let a = FieldElement::from(Ristretto255Scalar::from_bits(a_bytes));
+
+        let mut c_bytes = [0; 32];
+        c_bytes[0] = 4;
+
+        let c = a * a;
+        let c_scalar: Ristretto255Scalar = c.into();
+        assert_eq!(c_scalar, Ristretto255Scalar::from_bits(c_bytes));
+    }
+
+    #[test]
+    fn one() {
+        let one: Ristretto255Scalar = FieldElement::one().into();
+        let one_times_one: Ristretto255Scalar = (FieldElement::one() * FieldElement::one()).into();
+
+        assert_eq!(one, one_times_one);
+
+        let two_field_element = FieldElement::one() + FieldElement::one();
+        let two: Ristretto255Scalar = two_field_element.into();
+        let two_times_one: Ristretto255Scalar = (two_field_element * FieldElement::one()).into();
+
+        assert_eq!(two, two_times_one);
     }
 }
