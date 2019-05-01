@@ -1,0 +1,39 @@
+language: rust
+rust:
+  - nightly
+cache: cargo
+sudo: false
+
+branches:
+  only:
+    - master
+
+install:
+  - curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+  - source ~/.nvm/nvm.sh
+  - nvm install 10
+
+before_script:
+  - npm install -g firebase-tools 
+  - rustup component add rustfmt-preview
+  - which mdbook || cargo install --version 0.2 --force mdbook
+
+stages:
+  - test
+  - name: deploy
+    if: branch = master
+
+jobs:
+  include:
+    - stage: test
+      name: "Source and Notes Tests"
+      script:
+        # Test the source
+        - cargo test
+        # Use the libraries we just built as deps for mdbook tests
+        - mdbook test -L target/release/deps
+      script: cargo fmt --all -- --check
+    - stage: deploy
+      name: "Website Deploy"
+      script: mdbook build
+      after_success: firebase deploy --token=$FIREBASE_TOKEN
