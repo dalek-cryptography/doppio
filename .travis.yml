@@ -26,14 +26,16 @@ stages:
 jobs:
   include:
     - stage: test
-      name: "Source and Notes Tests"
+      name: "cargo test && mdbook test"
       script:
         # Test the source
         - cargo test
         # Use the libraries we just built as deps for mdbook tests
         - mdbook test -L target/release/deps
-    - script: cargo fmt --all -- --check
+    - stage: test
+      name: "cargo fmt"
+      script: cargo fmt --all -- --check
     - stage: deploy
-      name: "Website Deploy"
+      name: "deploy to firebase"
       script: mdbook build
       after_success: firebase deploy --token=$FIREBASE_TOKEN
