@@ -16,7 +16,7 @@ install:
 before_script:
   - npm install -g firebase-tools 
   - rustup component add rustfmt-preview
-  - which mdbook || cargo install --version 0.2 --force mdbook
+  - which mdbook || cargo install --version "^0.2" --force mdbook
 
 stages:
   - test
