@@ -32,7 +32,7 @@ jobs:
         - cargo test
         # Use the libraries we just built as deps for mdbook tests
         - mdbook test -L target/release/deps
-      script: cargo fmt --all -- --check
+    - script: cargo fmt --all -- --check
     - stage: deploy
       name: "Website Deploy"
       script: mdbook build
