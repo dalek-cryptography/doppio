@@ -11,7 +11,7 @@ def get_A(n):
 i = 1
 
 # Instead of searching for a curve of order 8 with twist order 4,
-# allow searching for a curve of order 4 with twist order 8.
+# allow searching for a curve of order 4 with twist order 8, or vv
 desired_cofactor = 8
 desired_twist_cofactor = 4
 
