@@ -35,6 +35,8 @@ def check(i):
                 if is_prime(otwist):
                     print("A = %s" % A)
                     return True
+    if i % 1000 == 0:
+        print("did not find curve at i = %s" % i)
     return False
 
 import multiprocessing as mp
