@@ -46,5 +46,5 @@ def check_parallel(start, end):
     with mp.Pool(8) as p:
         # Just discard the results and rely on stdout
         # instead of syncing progress across threads
-        p.map(check, candidates)
+        p.map(check, candidates, chunksize=1)
     
