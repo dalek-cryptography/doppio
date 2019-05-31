@@ -142,3 +142,15 @@ blockquote {
     visibility: visible;
 }
   
+
+/* Add a class that makes SVGs match the theme style */
+
+svg.themed {
+    margin: auto;
+    display: block;
+}
+
+svg.themed > g {
+    stroke: var(--fg);
+    fill: var(--bg);
+}
