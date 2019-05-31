@@ -9,24 +9,13 @@ is the order of the ristretto255 group, so that group operations can
 be efficiently performed inside of a Bulletproof (or some other
 discrete-log based proof system implemented using ristretto255).
 
-We will proceed in two steps: first, we select a friendly elliptic
-curve defined over the ristretto255 scalar field, and then we will use
-Decaf on that curve to construct a prime-order group from the
+We will proceed in two steps: first, we select a (family of) elliptic
+curve(s) defined over the ristretto255 scalar field, and then we will use
+Decaf to construct a prime-order group from a
 non-prime-order curve.
-
-Although Ristretto extends the Decaf technique to cover curves with
-cofactor \\(8\\), it does so at a theoretical cost of complexity and a
-practical cost of an extra sign check.  While the cost of a sign check
-is quite small in the machine cost model for software implementations,
-it is much more significant in the circuit cost model ([as
-noted][daira_sign] by Daira Hopwood).  Sean Bowe [proposed][sean_curve] a
-cofactor-\\(8\\) curve for this setting, but for the reasons above it
-is preferable to select a curve of cofactor \\(4\\).
-
-The [conceptual diagram][conceptual_diagram] on the Ristretto website
-shows that Decaf and Ristretto do not operate on just one curve, but
-on a family of curves related by isogenies (INSERT BETTER DIAGRAM AND
-REWORK THIS).
+Decaf's conceptual plane does not include just one curve, but a family
+of curves related by isogenies, depicted in the following diagram
+parameterized by field elements \\(a,d\\):
 
 <svg class="themed" width="66%" viewBox="0 0 949 677" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linejoin="round">
@@ -77,17 +66,65 @@ REWORK THIS).
     </g>
 </svg>
 
+The Jacobi quartic \\(\mathcal J_{a^2, a-2d}\\) is conceptually
+central; it is connected to bitstrings \\(\\{0,1\\}^n\\) by the
+encoding function.  On the top row is the Edwards curve \\(\mathcal
+E_{a,d}\\) and an isogenous curve \\(\mathcal E_{-a, d-a}\\).  On the
+bottom row is the Montgomery curve \\(\mathcal M_{a, 2-4d/a}\\) with
+Montgomery parameter \\(A = 2-4d/a\\).  
+The Decaf strategy is to construct a
+prime-order group using any of the Edwards or Montgomery curves by
+transporting the encoding defined on the Jacobi quartic along an
+isogeny.
+
+As noted in the [Decaf paper][decaf_paper], results of [Ahmadi and
+Granger][ahmadi_granger] show that the curves \\(\mathcal E_{a,d}\\)
+and \\(\mathcal E_{-a, d-a}\\) are both \\(2\\)-isogenous to the same
+Jacobi quartic and thus \\(4\\)-isogenous to each other.
+The Montgomery curve is also \\(2\\)-isogenous to the Jacobi quartic; 
+depending on the ground field and the
+parameters, the Montgomery curve may be isomorphic to another Edwards
+curve \\(\mathcal E'\\).  This connection is used for Ristretto, but
+is drawn lightly in the diagram because we will not use it here, as we
+have freedom to select an arbitrary curve, and are not constrained by
+legacy compatibility.
+
 While Decaf provides a prime-order group with a canonical encoding and
 built-in validation, it is concievable that a user might want to use
-the underlying curve directly.  For this reason we would like to
-(twist security) 
+one of the underlying curves directly.
+Montgomery curves allow fast x-coordinate arithmetic; as described in
+the [Costello-Smith survey][costello_smith], this really operates on
+the Kummer line of the curve, which unifies the curve and its
+quadratic twist.  For this to be secure, both the Montgomery curve and
+its twist must have nearly-prime order.
+Unfortunately, as noted on page 15 of that paper, when 
+\\(q \equiv 1 \pmod 4\\), as in our case,
+it's not possible for both the curve and its quadratic
+twist to have minimal cofactor \\(4\\); one can have cofactor \\(4\\)
+but the other must have cofactor \\(8\\).
 
-Unfortunately, as noted on page 15 of the
-[Costello-Smith survey][costello_smith], when \\(q \equiv 1 \pmod
-4\\), it's not possible for both the curve and its quadratic twist to
-have minimal cofactor \\(4\\); one can have cofactor \\(4\\) but the
-other must have cofactor \\(8\\).  This means (XXX explanation of
-unification of curve and twist, fit into diagram to be drawn)
+The "base" curve is usually selected to have cofactor \\(8\\), so that
+multiplication by the "base" cofactor also clears the "twist"
+cofactor.  But this notion of twist security is only relevant when
+using the Kummer line, which unifies both curves and from whose
+perspective there is no canonically distinguished "base" and "twist".
+So it is sufficent to specify that Montgomery arithmetic should
+multiply by \\(8\\), the lcm of the cofactors of the curves it
+unifies; the "SafeCurves" criteria is an essentially arbitrary choice
+which selects Curve25519.
+
+On the other hand, specifying a cofactor \\(4\\) curve for use with
+Decaf has an important advantage.  While Decaf can be extended to
+cover curves with cofactor \\(8\\), as in ristretto255, this comes at
+a theoretical cost of complexity and a practical cost of an extra sign
+check.  While the cost of a sign check is quite small in the machine
+cost model for software implementations, it is much more significant
+in the circuit cost model for proof systems ([as noted][daira_sign] by
+Daira Hopwood).  Sean Bowe [proposed][sean_curve] a cofactor-\\(8\\)
+Montgomery curve intended for use with Ristretto inside of a circuit,
+but for the reasons above it is preferable to discard the arbitrary
+"SafeCurves" cofactor criterion and to instead select a curve of
+cofactor \\(4\\) with twist cofactor \\(8\\).
 
 To select curve parameters, we follow an analogous procedure as in the
 [selection of Ed448][ed448], setting \\(a = 1\\) and searching for
@@ -100,27 +137,31 @@ Using the `derive.sage` script contained in this repo (modified from
 the script used to select JubJub), we find two pairs of small parameters:
 * \\( (a, d) = (1, -63071) \\)
 * \\( (a, d) = (1, 63072) \\)
+
 and choose the one with \\(d\\) least in absolute value, \\(d = -63071\\).
 
-This Edwards curve is 4-isogenous to the Montgomery curve with \\(A = 252286\\). 
-As noted in the [Decaf paper], results of [Ahmadi and
-Granger][ahmadi_granger] show that the curves \\(\mathcal E_{a,d}\\)
-and \\(\mathcal E_{-a, d-a}\\) are both \\(2\\)-isogenous to the same
-Jacobi quartic and thus \\(4\\)-isogenous to each other.  Starting
-from \\((a,d) = (1, -63071)\\), we obtain \\((-a, d-a) = (-1,-63071-1)
-= (-1, -63072)\\), which is the quadratic twist of the second
-parameter pair (and explains its presence).  
-
-This means that a Decaf implementation will be able to use any of the curves
+This curve 
 \\[
-\mathcal E : x^2 + y^2 = 1 - 63071x^2y^2 \\\\
-\hat {\mathcal E }: -x^2 + y^2 = 1 - 63072x^2y^2 \\\\
-\mathcal M : v^2 = u(u^2 + 252286u + 1)
+\mathcal E_{a,d} : x^2 + y^2 = 1 - 63071x^2y^2
 \\]
-to implement Decaf, depending on which curve model is optimal in the relevant cost model.
-For instance, a software implementation may prefer using \\(\hat
-{\mathcal E}\\) while inside of a circuit \\(\mathcal M\\) may be
-better.
+fits into the top-left position in the diagram above; the isogenous curves are
+\\[
+\mathcal E_{-a, d-a}: -x^2 + y^2 = 1 - 63072x^2y^2 \\\\
+\mathcal M_{a,2-4d/a}: v^2 = u(u^2 + 252286u + 1),
+\\]
+and a wire-compatible Decaf implementation is free to use any of these
+curves internally, depending on which curve model is optimal in the
+relevant cost model.  For instance, a software implementation may
+prefer \\(\mathcal E_{-a,d-a}\\) to allow use of the [fast extended
+coordinates][hwcd_edwards] of Hisil, Wong, Carter, and Dawson, while a
+circuit implementation may prefer using Daira Hopwood's [ordinary
+Montgomery formulas][daira_mont] which are expressible with fewer
+constraints.
+
+Note also that the curve \\(\mathcal E_{-a,d-a} \\) has parameters
+\\((-1, -63072)\\), and is isomorphic to the second
+parameter pair found during the search, which explains why the search
+found two adjacent parameter pairs.
 
 [sean_curve]: https://twitter.com/ebfull/status/1087571257057406976
 [daira_sign]: https://github.com/zcash/zcash/issues/3924#issuecomment-493775590
@@ -128,3 +169,5 @@ better.
 [costello_smith]: https://arxiv.org/abs/1703.01863
 [decaf_paper]: http://eprint.iacr.org/2015/673
 [ahmadi_granger]: http://eprint.iacr.org/2011/135
+[daira_mont]: https://github.com/zcash/zcash/issues/3924#issue-425644233
+[hwcd_edwards]: http://eprint.iacr.org/2008/522
