@@ -2,7 +2,7 @@
 
 Work-in-progress repo for an embedded curve over the ristretto255 scalar field, for use in Bulletproofs.
 
-The curve was selected by Sean Bowe (cf https://twitter.com/ebfull/status/1087571257057406976).
+Sean Bowe previously suggested an alternate curve (cf https://twitter.com/ebfull/status/1087571257057406976), but for the reasons described in the notes we prefer a slightly different set of parameters.
 
 # Goals
 
