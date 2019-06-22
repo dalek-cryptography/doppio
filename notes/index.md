@@ -9,6 +9,9 @@ defined over the [ristretto255][ristretto255] scalar field and also
 serves as a worked example of how to use Decaf with elliptic curves
 embedded in zero-knowledge proof systems.
 
+The curve selection procedure is described on 
+[this page](./curve_selection.md).
+
 [bp]: https://github.com/dalek-cryptography/bulletproofs
 [doppio_gh]: https://github.com/dalek-cryptography/doppio_gh
 [ristretto255]: https://ristretto.group
